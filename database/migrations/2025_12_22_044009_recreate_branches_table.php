@@ -4,45 +4,51 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration {
+return new class extends Migration
+{
     public function up(): void
     {
+        // بنحذف الجدول لو موجود عشان نبنيه من جديد بنضافة
+        Schema::dropIfExists('branches');
+
         Schema::create('branches', function (Blueprint $table) {
             $table->id();
-
-            $table->unsignedInteger('branch_number')->unique();
+            // تأكدنا إننا بنستخدم الترقيم الآمن
+            $table->string('branch_number')->unique()->nullable();
 
             $table->string('name');
-            $table->string('manager_name');
-            $table->string('manager_phone');
-            $table->string('email')->unique();
-
+            $table->string('branch_type'); // direct, franchise, hub
             $table->foreignId('governorate_id')->constrained()->cascadeOnDelete();
 
-            // ❗ string مش enum عشان ميحصلش truncate
-            $table->string('branch_type');
-
-            $table->text('address');
-
+            // بيانات المدير والتواصل
+            $table->string('manager_name');
+            $table->string('manager_phone');
+            $table->string('email')->nullable();
+            $table->text('address')->nullable();
             $table->boolean('is_active')->default(true);
 
-            /* ===== عمولات تسليم عادي ===== */
+            // ==========================================
+            // ✅ العمولات المالية (الهيكلة النهائية)
+            // ==========================================
+
+            // 1. التوصيل العادي (Doorstep)
             $table->decimal('normal_delivery_fee', 10, 2)->default(0);
             $table->decimal('normal_delivery_percent', 5, 2)->default(0);
-            $table->decimal('normal_cod_fee', 10, 2)->default(0);
-            $table->decimal('normal_cod_percent', 5, 2)->default(0);
-            $table->decimal('normal_paid_return_fee', 10, 2)->default(0);
+
+            $table->decimal('normal_paid_return_fee', 10, 2)->default(0);     // مرتجع مدفوع
             $table->decimal('normal_paid_return_percent', 5, 2)->default(0);
 
-            /* ===== عمولات تسليم مكتب ===== */
+            $table->decimal('normal_return_on_sender_fee', 10, 2)->default(0); // مرتجع على الراسل
+            $table->decimal('normal_return_on_sender_percent', 5, 2)->default(0);
+
+            // 2. توصيل المكتب (Office) - تسليم فقط
             $table->decimal('office_delivery_fee', 10, 2)->default(0);
             $table->decimal('office_delivery_percent', 5, 2)->default(0);
-            $table->decimal('office_cod_fee', 10, 2)->default(0);
-            $table->decimal('office_cod_percent', 5, 2)->default(0);
-            $table->decimal('office_paid_return_fee', 10, 2)->default(0);
-            $table->decimal('office_paid_return_percent', 5, 2)->default(0);
+
+            // (تم إلغاء أعمدة التحصيل COD وأي أعمدة قديمة)
 
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 

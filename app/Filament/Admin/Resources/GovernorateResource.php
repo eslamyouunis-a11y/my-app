@@ -5,51 +5,46 @@ namespace App\Filament\Admin\Resources;
 use App\Filament\Admin\Resources\GovernorateResource\Pages;
 use App\Models\Governorate;
 use Filament\Forms;
+use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
+use Filament\Tables\Table;
 
 class GovernorateResource extends Resource
 {
     protected static ?string $model = Governorate::class;
-
     protected static ?string $navigationIcon = 'heroicon-o-map';
     protected static ?string $navigationLabel = 'المحافظات';
-    protected static ?string $pluralLabel = 'المحافظات';
-    protected static ?string $modelLabel = 'محافظة';
+    protected static ?string $navigationGroup = 'الإعدادات';
     protected static ?int $navigationSort = 1;
 
-    public static function form(Forms\Form $form): Forms\Form
+    public static function form(Form $form): Form
     {
-        return $form
-            ->schema([
-                Forms\Components\TextInput::make('name')
-                    ->label('اسم المحافظة')
-                    ->required()
-                    ->unique(ignoreRecord: true),
-
-                Forms\Components\Toggle::make('is_active')
-                    ->label('مفعلة')
-                    ->default(true),
-            ]);
+        return $form->schema([
+            Forms\Components\TextInput::make('name')
+                ->label('اسم المحافظة')
+                ->required()
+                ->unique(ignoreRecord: true),
+            Forms\Components\Toggle::make('is_active')
+                ->label('مفعلة')
+                ->default(true),
+        ]);
     }
 
-    public static function table(Tables\Table $table): Tables\Table
+    public static function table(Table $table): Table
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('name')
-                    ->label('اسم المحافظة')
-                    ->searchable(),
-
+                Tables\Columns\TextColumn::make('name')->label('المحافظة')->searchable()->sortable(),
                 Tables\Columns\TextColumn::make('areas_count')
                     ->label('عدد المناطق')
-                    ->counts('areas'),
-
-                Tables\Columns\IconColumn::make('is_active')
-                    ->label('الحالة')
-                    ->boolean(),
+                    ->counts('areas')
+                    ->badge(),
+                Tables\Columns\ToggleColumn::make('is_active')->label('مفعلة'),
             ])
-            ->defaultSort('name');
+            ->actions([
+                Tables\Actions\EditAction::make(),
+            ]);
     }
 
     public static function getPages(): array

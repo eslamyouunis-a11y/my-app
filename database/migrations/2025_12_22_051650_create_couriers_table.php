@@ -4,50 +4,37 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration {
+return new class extends Migration
+{
     public function up(): void
     {
+        Schema::dropIfExists('couriers'); // أمان عشان لو الجدول موجود يمسحه
+
         Schema::create('couriers', function (Blueprint $table) {
             $table->id();
 
-            // كود المندوب
-            $table->string('courier_code')->unique();
-
-            // بيانات أساسية
+            // البيانات الأساسية
+            $table->string('courier_code')->unique()->nullable();
             $table->string('full_name');
-            $table->string('national_id')->unique();
-            $table->string('email')->unique();
-            $table->string('phone');
-
+            $table->string('phone')->unique(); // عشان نمنع التكرار من الداتابيز
+            $table->string('national_id')->unique(); // عشان نمنع التكرار
             $table->date('birth_date')->nullable();
+            $table->text('address')->nullable();
 
-            // عنوان (نص عادي)
-            $table->string('governorate');
-            $table->string('city');
-            $table->text('address');
-
-            // وسيلة النقل
-            $table->enum('vehicle_type', [
-                'car',
-                'motorcycle',
-                'bicycle',
-                'public_transport',
-            ]);
-
-            // الرخص
+            // بيانات المركبة
+            $table->string('vehicle_type')->nullable();
             $table->date('driving_license_expiry')->nullable();
             $table->date('vehicle_license_expiry')->nullable();
 
-            // معلومات طوارئ (اختيارية)
-            $table->string('emergency_name')->nullable();
-            $table->string('emergency_relation')->nullable();
-            $table->string('emergency_phone_1')->nullable();
-            $table->string('emergency_phone_2')->nullable();
-            $table->string('emergency_address')->nullable();
+            // العلاقات
+            $table->foreignId('branch_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('governorate_id')->nullable()->constrained()->nullOnDelete();
+            $table->foreignId('area_id')->nullable()->constrained()->nullOnDelete();
 
-            // الحالة
             $table->boolean('is_active')->default(true);
 
+            // ✅ ده العمود اللي كان ناقص ومسبب المشكلة
+            $table->softDeletes();
             $table->timestamps();
         });
     }

@@ -1,26 +1,16 @@
 <?php
 
-namespace App\Filament\Admin\Resources\CourierResource\Pages;
+namespace App\Filament\Admin\Resources\MerchantResource\Pages;
 
-use App\Filament\Admin\Resources\CourierResource;
+use App\Filament\Admin\Resources\MerchantResource;
 use Filament\Resources\Pages\EditRecord;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-use Filament\Actions; // ✅
 
-class EditCourier extends EditRecord
+class EditMerchant extends EditRecord
 {
-    protected static string $resource = CourierResource::class;
-
-    protected function getHeaderActions(): array
-    {
-        return [
-            Actions\DeleteAction::make(),
-            Actions\ForceDeleteAction::make(),
-            Actions\RestoreAction::make(),
-        ];
-    }
+    protected static string $resource = MerchantResource::class;
 
     protected function mutateFormDataBeforeFill(array $data): array
     {
@@ -33,22 +23,23 @@ class EditCourier extends EditRecord
     protected function handleRecordUpdate(Model $record, array $data): Model
     {
         return DB::transaction(function () use ($record, $data) {
+            // تحديث اليوزر
             if ($record->user) {
                 $userUpdate = [
-                    'name'  => $data['full_name'],
+                    'name'  => $data['contact_person_name'],
                     'email' => $data['email'],
                 ];
-
                 if (! empty($data['password'])) {
                     $userUpdate['password'] = Hash::make($data['password']);
                 }
-
                 $record->user->update($userUpdate);
             }
 
+            // تنظيف الداتا للتاجر
             unset($data['email']);
             unset($data['password']);
 
+            // تحديث التاجر
             $record->update($data);
 
             return $record;

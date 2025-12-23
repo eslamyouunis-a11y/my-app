@@ -5,29 +5,55 @@ namespace App\Filament\Admin\Resources\BranchResource\Pages;
 use App\Filament\Admin\Resources\BranchResource;
 use App\Models\User;
 use Filament\Resources\Pages\CreateRecord;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Schema;
+use Filament\Notifications\Notification;
 
 class CreateBranch extends CreateRecord
 {
     protected static string $resource = BranchResource::class;
 
-    protected function afterCreate(): void
+    protected function handleRecordCreation(array $data): Model
     {
-        $branch = $this->record;
-        $data = $this->data;
+        return DB::transaction(function () use ($data) {
 
-        $user = User::create([
-            'name'     => $branch->name,
-            'email'    => $data['email'],
-            'password' => Hash::make($data['password']),
-        ]);
+            // 1. استخراج بيانات المستخدم (بما فيها الباسورد اللي بقة موجود دلوقتي)
+            $userData = [
+                'name'     => $data['manager_name'],
+                'email'    => $data['email'],
+                'password' => $data['password'],
+            ];
 
-        $user->assignRole('branch');
+            // 2. ⚠️ خطوة مهمة جداً: حذف الباسورد من الداتا عشان الفرع ميعملش Error
+            // لأن جدول branches مفيهوش عمود اسمه password
+            unset($data['password']);
 
-        if (Schema::hasColumn('users', 'branch_id')) {
-            $user->branch_id = $branch->id;
-            $user->save();
-        }
+            // 3. إنشاء الفرع (بدون الباسورد)
+            $branch = static::getModel()::create($data);
+
+            // 4. إنشاء المستخدم وربطه بالفرع
+            $user = User::create([
+                'name'      => $userData['name'],
+                'email'     => $userData['email'],
+                'password'  => Hash::make($userData['password']),
+                'branch_id' => $branch->id,
+            ]);
+
+            // 5. تعيين الصلاحية
+            if (method_exists($user, 'assignRole')) {
+                $user->assignRole('branch');
+            }
+
+            return $branch;
+        });
+    }
+
+    protected function getCreatedNotification(): ?Notification
+    {
+        return Notification::make()
+            ->success()
+            ->title('تم إنشاء الفرع بنجاح')
+            ->body('تم إنشاء الفرع وحساب المدير المرتبط به.');
     }
 }

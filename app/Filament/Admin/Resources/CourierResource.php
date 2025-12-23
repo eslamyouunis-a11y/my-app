@@ -3,291 +3,88 @@
 namespace App\Filament\Admin\Resources;
 
 use App\Filament\Admin\Resources\CourierResource\Pages;
-use App\Models\Area;
 use App\Models\Courier;
 use Filament\Forms;
 use Filament\Forms\Form;
-use Filament\Forms\Get;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Filament\Forms\Components\Section;
+use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Grid;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
-use Illuminate\Validation\Rules\Password;
-use Illuminate\Validation\Rule;
+// ✅ استدعاءات الـ Infolist
+use Filament\Infolists;
+use Filament\Infolists\Infolist;
 
 class CourierResource extends Resource
 {
     protected static ?string $model = Courier::class;
-
     protected static ?string $navigationIcon = 'heroicon-o-truck';
     protected static ?string $navigationLabel = 'المناديب';
+    protected static ?string $modelLabel = 'مندوب';
+    protected static ?int $navigationSort = 3;
 
     public static function form(Form $form): Form
     {
         return $form->schema([
             Forms\Components\Tabs::make()
                 ->tabs([
-
-                    /* =========================
-                     | بيانات المندوب
-                     ========================= */
-                    Forms\Components\Tabs\Tab::make('بيانات المندوب')
+                    Forms\Components\Tabs\Tab::make('البيانات الشخصية')
                         ->schema([
-
-                            Forms\Components\TextInput::make('courier_code')
-                                ->label('كود المندوب')
-                                ->disabled()
-                                ->dehydrated(true),
-
-                            Forms\Components\TextInput::make('full_name')
-                                ->label('اسم المندوب')
-                                ->required()
-                                ->maxLength(255),
-
-                            Forms\Components\Select::make('branch_id')
-                                ->label('الفرع')
-                                ->relationship('branch', 'name')
-                                ->searchable()
-                                ->preload()
-                                ->required(),
-
-                            Forms\Components\TextInput::make('national_id')
-                                ->label('الرقم القومي')
-                                ->required()
-                                ->maxLength(255),
-
-                            Forms\Components\TextInput::make('phone')
-                                ->label('رقم الهاتف')
-                                ->tel()
-                                ->required(),
-
-                            Forms\Components\DatePicker::make('birth_date')
-                                ->label('تاريخ الميلاد'),
-
-                            Forms\Components\Select::make('vehicle_type')
-                                ->label('نوع المركبة')
-                                ->options([
-                                    'motorcycle'       => 'موتوسيكل',
-                                    'car'              => 'سيارة',
-                                    'bicycle'          => 'عجلة',
-                                    'public_transport' => 'مواصلات',
-                                ])
-                                ->required(),
-
-                            Forms\Components\Toggle::make('is_active')
-                                ->label('مفعل')
-                                ->default(true),
-
-                        ])
-                        ->columns(2),
-
-                    /* =========================
-                     | العنوان (Governorate/Area)
-                     ========================= */
-                    Forms\Components\Tabs\Tab::make('العنوان')
-                        ->schema([
-
-                            Forms\Components\Select::make('governorate_id')
-                                ->label('المحافظة')
-                                ->relationship('governorate', 'name')
-                                ->searchable()
-                                ->preload()
-                                ->reactive()
-                                ->required()
-                                ->afterStateUpdated(fn ($set) => $set('area_id', null)),
-
-                            Forms\Components\Select::make('area_id')
-                                ->label('المنطقة')
-                                ->options(fn (Get $get) =>
-                                    $get('governorate_id')
-                                        ? Area::where('governorate_id', $get('governorate_id'))
-                                            ->orderBy('name')
-                                            ->pluck('name', 'id')
-                                            ->toArray()
-                                        : []
-                                )
-                                ->searchable()
-                                ->required()
-                                ->reactive()
-                                // المدينة DB NOT NULL → نملأها تلقائي باسم المنطقة
-                                ->afterStateUpdated(function ($set, $state) {
-                                    $set('city', $state ? Area::whereKey($state)->value('name') : null);
-                                }),
-
-                            // city موجود في DB ومطلوب، لكن مش عايزينه يظهر → hidden
-                            Forms\Components\Hidden::make('city')
-                                ->dehydrated(true),
-
-                            Forms\Components\Textarea::make('address')
-                                ->label('العنوان التفصيلي')
-                                ->required()
-                                ->columnSpanFull(),
-
-                        ])
-                        ->columns(2),
-
-                    /* =========================
-                     | الرخص
-                     ========================= */
-                    Forms\Components\Tabs\Tab::make('الرخص')
-                        ->schema([
-
-                            Forms\Components\DatePicker::make('driving_license_expiry')
-                                ->label('انتهاء رخصة القيادة'),
-
-                            Forms\Components\DatePicker::make('vehicle_license_expiry')
-                                ->label('انتهاء رخصة المركبة'),
-
-                        ])
-                        ->columns(2),
-
-                    /* =========================
-                     | الطوارئ
-                     ========================= */
-                    Forms\Components\Tabs\Tab::make('الطوارئ')
-                        ->schema([
-
-                            Forms\Components\TextInput::make('emergency_name')
-                                ->label('اسم شخص الطوارئ'),
-
-                            Forms\Components\TextInput::make('emergency_relation')
-                                ->label('صلة القرابة'),
-
-                            Forms\Components\TextInput::make('emergency_phone_1')
-                                ->label('هاتف طوارئ 1'),
-
-                            Forms\Components\TextInput::make('emergency_phone_2')
-                                ->label('هاتف طوارئ 2'),
-
-                            Forms\Components\Textarea::make('emergency_address')
-                                ->label('عنوان الطوارئ')
-                                ->columnSpanFull(),
-
-                        ])
-                        ->columns(2),
-
-                    /* =========================
-                     | العمولات (Hydration يدوي)
-                     ========================= */
-                    Forms\Components\Tabs\Tab::make('العمولات')
-                        ->schema([
-
-                            Forms\Components\Section::make('التسليم')
+                            Section::make()
                                 ->schema([
-                                    Forms\Components\TextInput::make('commission.delivery_value')
-                                        ->label('Delivery value')
-                                        ->numeric()
-                                        ->default(0)
-                                        ->afterStateHydrated(fn ($component, $state, $record) =>
-                                            $record?->commission
-                                                ? $component->state($record->commission->delivery_value)
-                                                : $component->state(0)
-                                        ),
-
-                                    Forms\Components\TextInput::make('commission.delivery_percentage')
-                                        ->label('Delivery percentage')
-                                        ->numeric()
-                                        ->default(0)
-                                        ->afterStateHydrated(fn ($component, $state, $record) =>
-                                            $record?->commission
-                                                ? $component->state($record->commission->delivery_percentage)
-                                                : $component->state(0)
-                                        ),
-                                ])
-                                ->columns(2),
-
-                            Forms\Components\Section::make('مدفوع')
-                                ->schema([
-                                    Forms\Components\TextInput::make('commission.paid_value')
-                                        ->label('Paid value')
-                                        ->numeric()
-                                        ->default(0)
-                                        ->afterStateHydrated(fn ($component, $state, $record) =>
-                                            $record?->commission
-                                                ? $component->state($record->commission->paid_value)
-                                                : $component->state(0)
-                                        ),
-
-                                    Forms\Components\TextInput::make('commission.paid_percentage')
-                                        ->label('Paid percentage')
-                                        ->numeric()
-                                        ->default(0)
-                                        ->afterStateHydrated(fn ($component, $state, $record) =>
-                                            $record?->commission
-                                                ? $component->state($record->commission->paid_percentage)
-                                                : $component->state(0)
-                                        ),
-                                ])
-                                ->columns(2),
-
-                            Forms\Components\Section::make('على الراسل')
-                                ->schema([
-                                    Forms\Components\TextInput::make('commission.sender_return_value')
-                                        ->label('Sender return value')
-                                        ->numeric()
-                                        ->default(0)
-                                        ->afterStateHydrated(fn ($component, $state, $record) =>
-                                            $record?->commission
-                                                ? $component->state($record->commission->sender_return_value)
-                                                : $component->state(0)
-                                        ),
-
-                                    Forms\Components\TextInput::make('commission.sender_return_percentage')
-                                        ->label('Sender return percentage')
-                                        ->numeric()
-                                        ->default(0)
-                                        ->afterStateHydrated(fn ($component, $state, $record) =>
-                                            $record?->commission
-                                                ? $component->state($record->commission->sender_return_percentage)
-                                                : $component->state(0)
-                                        ),
-                                ])
-                                ->columns(2),
-
+                                    TextInput::make('full_name')->label('الاسم بالكامل')->required(),
+                                    TextInput::make('phone')->label('رقم الهاتف')->tel()->required()->unique(ignoreRecord: true),
+                                    TextInput::make('national_id')->label('الرقم القومي')->numeric()->length(14)->unique(ignoreRecord: true),
+                                    Forms\Components\DatePicker::make('birth_date')->label('تاريخ الميلاد'),
+                                    Forms\Components\Select::make('branch_id')->label('الفرع التابع له')->relationship('branch', 'name')->searchable()->preload()->required(),
+                                    Forms\Components\Select::make('governorate_id')->label('المحافظة')->relationship('governorate', 'name')->searchable()->live()->preload()->afterStateUpdated(fn (Forms\Set $set) => $set('area_id', null)),
+                                    Forms\Components\Select::make('area_id')->label('المنطقة')->relationship('area', 'name', modifyQueryUsing: function ($query, Forms\Get $get) {
+                                            return $query->where('governorate_id', $get('governorate_id'));
+                                        })->searchable()->preload()->disabled(fn (Forms\Get $get) => ! $get('governorate_id')),
+                                    Forms\Components\Textarea::make('address')->label('العنوان')->columnSpanFull(),
+                                ])->columns(2),
                         ]),
-
-                    /* =========================
-                     | الدخول (User)
-                     ========================= */
-                    Forms\Components\Tabs\Tab::make('الدخول')
+                    Forms\Components\Tabs\Tab::make('بيانات الدخول')
+                        ->icon('heroicon-m-key')
                         ->schema([
-
-                            // الإيميل يظهر فقط (مش قابل للتعديل)
-                            Forms\Components\TextInput::make('email')
-                                ->label('البريد الإلكتروني')
-                                ->email()
-                                ->disabled()
-                                ->required(fn ($livewire) => $livewire instanceof \Filament\Resources\Pages\CreateRecord)
-                                ->rule(fn (?Courier $record) =>
-                                    Rule::unique('users', 'email')->ignore($record?->user?->id)
-                                )
-                                ->afterStateHydrated(function ($component, $state, $record) {
-                                    // في edit: اعرض user.email
-                                    if ($record?->user) {
-                                        $component->state($record->user->email);
-                                    }
-                                })
-                                ->dehydrated(false),
-
-                            // الباسورد: ممكن تعدله فقط — مش إجباري في edit
-                            Forms\Components\TextInput::make('password')
-                                ->label('كلمة المرور')
-                                ->password()
-                                ->required(fn ($livewire) => $livewire instanceof \Filament\Resources\Pages\CreateRecord)
-                                ->rule(Password::default())
-                                ->dehydrated(false),
-
-                            Forms\Components\TextInput::make('password_confirmation')
-                                ->label('تأكيد كلمة المرور')
-                                ->password()
-                                ->same('password')
-                                ->dehydrated(false),
-
-                        ])
-                        ->columns(2),
-
-                ]),
+                            Section::make()
+                                ->schema([
+                                    TextInput::make('email')->label('البريد الإلكتروني')->email()->required()->unique('users', 'email', ignoreRecord: true),
+                                    TextInput::make('password')->label('كلمة المرور')->password()->revealable()->required(fn ($livewire) => $livewire instanceof Pages\CreateCourier)->helperText('اتركه فارغاً عند التعديل.'),
+                                ])->columns(2),
+                        ]),
+                    Forms\Components\Tabs\Tab::make('المركبة')
+                        ->schema([
+                            Forms\Components\Select::make('vehicle_type')->label('نوع المركبة')->options(['motorcycle' => 'موتوسيكل', 'car' => 'سيارة', 'van' => 'فان', 'bicycle' => 'دراجة']),
+                            Forms\Components\DatePicker::make('driving_license_expiry')->label('انتهاء رخصة القيادة'),
+                            Forms\Components\DatePicker::make('vehicle_license_expiry')->label('انتهاء رخصة المركبة'),
+                        ])->columns(3),
+                    Forms\Components\Tabs\Tab::make('العمولات')
+                        ->icon('heroicon-m-banknotes')
+                        ->schema([
+                             Forms\Components\Section::make('هيكلة عمولات المندوب')
+                                ->relationship('commission')
+                                ->schema([
+                                    Grid::make(3)->schema([
+                                        Forms\Components\Group::make([
+                                            TextInput::make('delivery_value')->label('قيمة التسليم')->numeric()->suffix('ج.م'),
+                                            TextInput::make('delivery_percentage')->label('نسبة التسليم')->numeric()->suffix('%'),
+                                        ])->label('تسليم ناجح'),
+                                        Forms\Components\Group::make([
+                                            TextInput::make('paid_value')->label('قيمة مرتجع مدفوع')->numeric()->suffix('ج.م'),
+                                            TextInput::make('paid_percentage')->label('نسبة مرتجع مدفوع')->numeric()->suffix('%'),
+                                        ])->label('مرتجع مدفوع'),
+                                        Forms\Components\Group::make([
+                                            TextInput::make('sender_return_value')->label('قيمة مرتجع راسل')->numeric()->suffix('ج.م'),
+                                            TextInput::make('sender_return_percentage')->label('نسبة مرتجع راسل')->numeric()->suffix('%'),
+                                        ])->label('مرتجع على الراسل'),
+                                    ]),
+                                ]),
+                        ]),
+                ])->columnSpanFull(),
         ]);
     }
 
@@ -295,52 +92,118 @@ class CourierResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('courier_code')->label('الكود')->sortable(),
+                Tables\Columns\TextColumn::make('courier_code')->label('الكود')->copyable()->weight('bold'),
                 Tables\Columns\TextColumn::make('full_name')->label('الاسم')->searchable(),
-                Tables\Columns\TextColumn::make('branch.name')->label('الفرع'),
-                Tables\Columns\TextColumn::make('governorate.name')->label('المحافظة'),
-                Tables\Columns\TextColumn::make('area.name')->label('المنطقة'),
-                Tables\Columns\IconColumn::make('is_active')->boolean()->label('مفعل'),
-
+                Tables\Columns\TextColumn::make('phone')->label('الهاتف'),
+                Tables\Columns\TextColumn::make('branch.name')->label('الفرع')->badge(),
+                Tables\Columns\IconColumn::make('is_active')->label('نشط')->boolean(),
             ])
             ->filters([
+                Tables\Filters\SelectFilter::make('branch_id')->relationship('branch', 'name')->label('الفرع')->preload(),
                 Tables\Filters\TrashedFilter::make(),
             ])
             ->actions([
+                Tables\Actions\ViewAction::make(), // ✅ زر العرض
                 Tables\Actions\EditAction::make(),
+                Tables\Actions\DeleteAction::make(),
+                Tables\Actions\ForceDeleteAction::make(),
+                Tables\Actions\RestoreAction::make(),
+            ])
+            ->bulkActions([
+                Tables\Actions\BulkActionGroup::make([
+                    Tables\Actions\DeleteBulkAction::make(),
+                    Tables\Actions\ForceDeleteBulkAction::make(),
+                    Tables\Actions\RestoreBulkAction::make(),
+                ]),
+            ]);
+    }
 
-                // حذف (Soft Delete) → يروح للمحذوفات
-                Tables\Actions\DeleteAction::make()
-                    ->label('حذف'),
+    // ✅ تصميم صفحة العرض (Infolist)
+    public static function infolist(Infolist $infolist): Infolist
+    {
+        return $infolist
+            ->schema([
+                // 1. قسم الأرصدة
+                Infolists\Components\Section::make('المحفظة والأرصدة')
+                    ->schema([
+                        Infolists\Components\Grid::make(3)->schema([
+                            Infolists\Components\TextEntry::make('commission_balance')
+                                ->label('رصيد العمولة (للمندوب)')
+                                ->money('EGP')
+                                ->size(Infolists\Components\TextEntry\TextEntrySize::Large)
+                                ->weight(\Filament\Support\Enums\FontWeight::Bold)
+                                ->color('success')
+                                ->icon('heroicon-m-banknotes'),
 
-                // استرجاع من المحذوفات
-                Tables\Actions\RestoreAction::make()
-                    ->label('استرجاع'),
+                            Infolists\Components\TextEntry::make('custody_balance')
+                                ->label('رصيد العهدة (على المندوب)')
+                                ->money('EGP')
+                                ->size(Infolists\Components\TextEntry\TextEntrySize::Large)
+                                ->weight(\Filament\Support\Enums\FontWeight::Bold)
+                                ->color('danger')
+                                ->icon('heroicon-m-archive-box'),
 
-                // حذف نهائي
-                Tables\Actions\ForceDeleteAction::make()
-                    ->label('حذف نهائي')
-                    ->color('danger'),
+                            Infolists\Components\TextEntry::make('is_active')
+                                ->label('حالة الحساب')
+                                ->badge()
+                                ->formatStateUsing(fn (bool $state) => $state ? 'نشط' : 'متوقف')
+                                ->color(fn (bool $state) => $state ? 'success' : 'danger'),
+                        ]),
+                    ]),
+
+                // 2. التفاصيل
+                Infolists\Components\Tabs::make('Details')
+                    ->tabs([
+                        Infolists\Components\Tabs\Tab::make('البيانات الشخصية')
+                            ->icon('heroicon-m-user')
+                            ->schema([
+                                Infolists\Components\Grid::make(3)->schema([
+                                    Infolists\Components\TextEntry::make('full_name')->label('الاسم'),
+                                    Infolists\Components\TextEntry::make('courier_code')->label('الكود')->copyable(),
+                                    Infolists\Components\TextEntry::make('phone')->label('الهاتف')->icon('heroicon-m-phone'),
+                                    Infolists\Components\TextEntry::make('national_id')->label('الرقم القومي'),
+                                    Infolists\Components\TextEntry::make('birth_date')->label('تاريخ الميلاد')->date(),
+                                    Infolists\Components\TextEntry::make('branch.name')->label('الفرع التابع له'),
+                                    Infolists\Components\TextEntry::make('address')->label('العنوان')->columnSpanFull(),
+                                ]),
+                            ]),
+                        Infolists\Components\Tabs\Tab::make('المركبة')
+                            ->icon('heroicon-m-truck')
+                            ->schema([
+                                Infolists\Components\Grid::make(3)->schema([
+                                    Infolists\Components\TextEntry::make('vehicle_type')->label('نوع المركبة')->badge(),
+                                    Infolists\Components\TextEntry::make('driving_license_expiry')->label('انتهاء رخصة القيادة')->date(),
+                                    Infolists\Components\TextEntry::make('vehicle_license_expiry')->label('انتهاء رخصة المركبة')->date(),
+                                ]),
+                            ]),
+                        Infolists\Components\Tabs\Tab::make('العمولات المتفق عليها')
+                            ->icon('heroicon-m-currency-dollar')
+                            ->schema([
+                                Infolists\Components\Section::make('التسليم والمرتجعات')
+                                    ->schema([
+                                        Infolists\Components\Grid::make(3)->schema([
+                                            Infolists\Components\TextEntry::make('commission.delivery_value')->label('قيمة التسليم')->money('EGP')->placeholder('الافتراضي'),
+                                            Infolists\Components\TextEntry::make('commission.paid_value')->label('قيمة المرتجع')->money('EGP')->placeholder('الافتراضي'),
+                                            Infolists\Components\TextEntry::make('commission.sender_return_value')->label('قيمة مرتجع الراسل')->money('EGP')->placeholder('الافتراضي'),
+                                        ]),
+                                    ]),
+                            ]),
+                    ])->columnSpanFull(),
             ]);
     }
 
     public static function getEloquentQuery(): Builder
     {
-        // مهم: signature الصحيح في Filament v3 + دعم المحذوفات
-        return parent::getEloquentQuery()
-            ->withoutGlobalScopes([
-                SoftDeletingScope::class,
-            ]);
+        return parent::getEloquentQuery()->withoutGlobalScopes([SoftDeletingScope::class]);
     }
 
     public static function getPages(): array
-{
-    return [
-        'index' => Pages\ListCouriers::route('/'),
-        'create' => Pages\CreateCourier::route('/create'),
-        'edit' => Pages\EditCourier::route('/{record}/edit'),
-        'view' => Pages\ViewCourier::route('/{record}'),
-    ];
-}
-
+    {
+        return [
+            'index' => Pages\ListCouriers::route('/'),
+            'create' => Pages\CreateCourier::route('/create'),
+            'edit' => Pages\EditCourier::route('/{record}/edit'),
+            'view' => Pages\ViewCourier::route('/{record}'), // ✅ تأكد من وجود دي (لو مش موجودة، Filament بيستخدم المودال)
+        ];
+    }
 }

@@ -3,84 +3,52 @@
 namespace App\Filament\Admin\Resources\CourierResource\Pages;
 
 use App\Filament\Admin\Resources\CourierResource;
-use App\Models\Area;
-use App\Models\Courier;
-use App\Models\CourierCommission;
 use App\Models\User;
 use Filament\Resources\Pages\CreateRecord;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\ValidationException;
 
 class CreateCourier extends CreateRecord
 {
     protected static string $resource = CourierResource::class;
 
-    protected function handleRecordCreation(array $data): Courier
+    protected function handleRecordCreation(array $data): Model
     {
-        // email/password مش dehydrated (جاية من $this->data)
-        $email = $this->data['email'] ?? null;
-        $password = $this->data['password'] ?? null;
+        return DB::transaction(function () use ($data) {
 
-        if (! $email || ! $password) {
-            throw ValidationException::withMessages([
-                'email' => 'البريد الإلكتروني مطلوب.',
-                'password' => 'كلمة المرور مطلوبة.',
+            // 1. استخراج بيانات المستخدم
+            $userData = [
+                'name'     => $data['full_name'], // نستخدم اسم المندوب كاسم للمستخدم
+                'email'    => $data['email'],
+                'password' => $data['password'],
+            ];
+
+            // 2. تنظيف البيانات (حذف الحقول التي لا تخص جدول couriers)
+            unset($data['email']);
+            unset($data['password']);
+
+            // 3. توليد كود المندوب تلقائياً (مثال بسيط)
+            $data['courier_code'] = 'CR-' . time(); // يمكنك تحسينها لاحقاً
+
+            // 4. إنشاء المندوب
+            $courier = static::getModel()::create($data);
+
+            // 5. إنشاء المستخدم وربطه بالمندوب
+            $user = User::create([
+                'name'       => $userData['name'],
+                'email'      => $userData['email'],
+                'password'   => Hash::make($userData['password']),
+                'courier_id' => $courier->id,
+                // 'branch_id' => $courier->branch_id, // اختياري: لو عايز تربط اليوزر بالفرع كمان
             ]);
-        }
 
-        // منع تعارض الإيميل على users
-        if (User::where('email', $email)->exists()) {
-            throw ValidationException::withMessages([
-                'email' => 'هذا البريد الإلكتروني مستخدم بالفعل.',
-            ]);
-        }
+            // 6. تعيين الصلاحية
+            if (method_exists($user, 'assignRole')) {
+                $user->assignRole('courier');
+            }
 
-        // commissions
-        $commissionData = $data['commission'] ?? [];
-        unset($data['commission']);
-
-        // city (NOT NULL) → خليها اسم المنطقة لو موجودة
-        if (empty($data['city']) && ! empty($data['area_id'])) {
-            $data['city'] = Area::whereKey($data['area_id'])->value('name') ?? '';
-        }
-
-        // إنشاء courier
-        $courier = Courier::create($data);
-
-        // حفظ commissions (حوّل null → 0)
-        $commissionPayload = [
-            'delivery_value'            => (float) ($commissionData['delivery_value'] ?? 0),
-            'delivery_percentage'       => (float) ($commissionData['delivery_percentage'] ?? 0),
-            'paid_value'                => (float) ($commissionData['paid_value'] ?? 0),
-            'paid_percentage'           => (float) ($commissionData['paid_percentage'] ?? 0),
-            'sender_return_value'       => (float) ($commissionData['sender_return_value'] ?? 0),
-            'sender_return_percentage'  => (float) ($commissionData['sender_return_percentage'] ?? 0),
-        ];
-
-        CourierCommission::create([
-            'courier_id' => $courier->id,
-            ...$commissionPayload,
-        ]);
-
-        // Sync legacy columns داخل couriers (اختياري لكن عندك موجود في DB)
-        $courier->update([
-            'delivery_fee'     => $commissionPayload['delivery_value'],
-            'delivery_percent' => $commissionPayload['delivery_percentage'],
-            'paid_fee'         => $commissionPayload['paid_value'],
-            'paid_percent'     => $commissionPayload['paid_percentage'],
-            'return_fee'       => $commissionPayload['sender_return_value'],
-            'return_percent'   => $commissionPayload['sender_return_percentage'],
-        ]);
-
-        // إنشاء user + ربطه
-        User::create([
-            'name'       => $courier->full_name,
-            'email'      => $email,
-            'password'   => Hash::make($password),
-            'courier_id' => $courier->id,
-            'branch_id'  => $courier->branch_id, // موجود في DB
-        ]);
-
-        return $courier;
+            return $courier;
+        });
     }
 }
