@@ -1,0 +1,10 @@
+<svg width="28" height="28" viewBox="0 0 28 28" xmlns="http://www.w3.org/2000/svg">
+    <!-- ICON BACKGROUND -->
+    <rect x="0" y="0" width="28" height="28" rx="7" fill="#F97316"></rect>
+
+    <!-- ROUTE NODES (same logo style) -->
+    <circle cx="9" cy="14" r="3" fill="#ffffff"></circle>
+    <circle cx="19" cy="14" r="3" fill="#ffffff"></circle>
+
+    <line x1="12" y1="14" x2="16" y2="14" stroke="#ffffff" stroke-width="2.4" stroke-linecap="round"></line>
+</svg>

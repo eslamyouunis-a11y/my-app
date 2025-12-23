@@ -1,0 +1,15 @@
+<svg width="200" height="40" viewBox="0 0 200 40" xmlns="http://www.w3.org/2000/svg">
+    <!-- ICON BACKGROUND (XL) -->
+    <rect x="16" y="1" width="38" height="38" rx="10" fill="#F97316"></rect>
+
+    <!-- ROUTE NODES (XL) -->
+    <circle cx="30" cy="20" r="4" fill="#ffffff"></circle>
+    <circle cx="48" cy="20" r="4" fill="#ffffff"></circle>
+
+    <line x1="35" y1="20" x2="43" y2="20" stroke="#ffffff" stroke-width="3" stroke-linecap="round"></line>
+
+    <!-- TEXT (XL) -->
+    <text x="122" y="22" fill="#1F2937" font-size="28" font-weight="900" font-family="Almarai, Arial, sans-serif" letter-spacing="0.7" text-anchor="middle" dominant-baseline="middle">
+        Courier
+    </text>
+</svg>
