@@ -2,6 +2,7 @@
 
 namespace App\Providers\Filament;
 
+use App\Http\Middleware\ForceArabic; // ✅ 1. استدعاء الميدل وير الجديد
 use Filament\Actions\CreateAction as HeaderCreateAction;
 use Filament\FontProviders\GoogleFontProvider;
 use Filament\Http\Middleware\Authenticate;
@@ -29,6 +30,7 @@ class AdminPanelProvider extends PanelProvider
     public function panel(Panel $panel): Panel
     {
         return $panel
+            ->default()
             ->id('admin')
             ->path('admin')
             ->authGuard('web')
@@ -44,7 +46,7 @@ class AdminPanelProvider extends PanelProvider
                 HeaderCreateAction::configureUsing(fn (HeaderCreateAction $action) => $action->createAnother(false));
             })
 
-            // ✅ BRAND / LOGO
+            // ✅ الشعار
             ->brandLogo(fn () => new HtmlString('
                 <div class="meta-logo-wrapper">
                     <img src="/logo-full.svg" class="logo-full" alt="Cargo">
@@ -56,7 +58,7 @@ class AdminPanelProvider extends PanelProvider
 
             ->darkMode(false)
 
-            // ✅ COLORS (زي اللي كنت عامله)
+            // ✅ الألوان
             ->colors([
                 'primary' => [
                     50  => '#eef1f3',
@@ -72,122 +74,52 @@ class AdminPanelProvider extends PanelProvider
                 ],
             ])
 
-            // ✅ FONT (Cairo) — ده الصح في Filament v3
+            // ✅ الخط
             ->font('Cairo', provider: GoogleFontProvider::class)
 
-            // ✅ RTL + CSS عالمي + ضمان الخط
+            // ✅ CSS & RTL
             ->renderHook('panels::head.end', fn () => new HtmlString('
                 <style>
-                    /* ===== RTL Global ===== */
                     html { direction: rtl; }
                     body { direction: rtl; text-align: right; }
-
-                    /* ===== Font Fallback ===== */
                     :root { --fi-font-family: "Cairo", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Arial, "Noto Sans Arabic", sans-serif; }
                     body, .fi-body, .fi-main, .fi-layout { font-family: var(--fi-font-family) !important; }
-
-                    /* ===== Global Background ===== */
-                    body, .fi-main {
-                        background: linear-gradient(135deg, #f0f2f5 0%, #ffffff 45%, #eef1f6 100%);
-                    }
-
-                    .fi-layout {
-                        --sidebar-width: 240px;
-                        --sidebar-collapsed-width: 72px;
-                    }
-
-                    .fi-sidebar {
-                        background: #ffffff !important;
-                        border-inline-start: 1px solid #e4e6eb; /* بدل left/right */
-                    }
-
-                    .meta-logo-wrapper {
-                        min-height: 72px;
-                        display: flex;
-                        align-items: center;
-                        justify-content: center;
-                    }
+                    body, .fi-main { background: linear-gradient(135deg, #f0f2f5 0%, #ffffff 45%, #eef1f6 100%); }
+                    .fi-layout { --sidebar-width: 240px; --sidebar-collapsed-width: 72px; }
+                    .fi-sidebar { background: #ffffff !important; border-inline-start: 1px solid #e4e6eb; }
+                    .meta-logo-wrapper { min-height: 72px; display: flex; align-items: center; justify-content: center; }
                     .logo-full { height: 56px; width: auto; display: block; }
                     .logo-icon { height: 42px; width: auto; display: none; }
                     .fi-layout[data-sidebar-collapsed="true"] .logo-full { display: none !important; }
                     .fi-layout[data-sidebar-collapsed="true"] .logo-icon { display: block !important; }
-
-                    .fi-sidebar-item-label,
-                    .fi-sidebar-group-label span,
-                    .fi-sidebar-item > a span {
-                        font-weight: 900 !important;
-                        color: #050505;
-                    }
-
-                    .fi-sidebar-item > a {
-                        margin-inline: 8px;
-                        border-radius: 12px;
-                        transition: background .2s ease;
-                    }
-
+                    .fi-sidebar-item-label, .fi-sidebar-group-label span, .fi-sidebar-item > a span { font-weight: 900 !important; color: #050505; }
+                    .fi-sidebar-item > a { margin-inline: 8px; border-radius: 12px; transition: background .2s ease; }
                     .fi-sidebar-item-active > a { background: #283943 !important; }
-                    .fi-sidebar-item-active > a span,
-                    .fi-sidebar-item-active > a svg { color: #ffffff !important; }
-
+                    .fi-sidebar-item-active > a span, .fi-sidebar-item-active > a svg { color: #ffffff !important; }
                     .fi-sidebar-item:not(.fi-sidebar-item-active) > a:hover { background: #f2f3f5; }
-
-                    .fi-section {
-                        border-radius: 16px !important;
-                        box-shadow: 0 8px 24px rgba(0,0,0,.04) !important;
-                        border: 1px solid #eef2f7 !important;
-                    }
-
-                    .fi-section-header {
-                        font-weight: 800 !important;
-                        font-size: 15px;
-                        color: #1f2937;
-                    }
-
-                    .fi-badge {
-                        border-radius: 999px !important;
-                        padding: 6px 14px !important;
-                        font-weight: 700;
-                    }
+                    .fi-section { border-radius: 16px !important; box-shadow: 0 8px 24px rgba(0,0,0,.04) !important; border: 1px solid #eef2f7 !important; }
+                    .fi-section-header { font-weight: 800 !important; font-size: 15px; color: #1f2937; }
+                    .fi-badge { border-radius: 999px !important; padding: 6px 14px !important; font-weight: 700; }
                 </style>
-
-                <script>
-                    // ✅ تأكيد dir/lang حتى لو حصل override من مكان تاني
-                    document.documentElement.setAttribute("dir", "rtl");
-                    document.documentElement.setAttribute("lang", "ar");
-                </script>
             '))
 
-            // ✅ NAV GROUPS (اختياري زي اللي كنت عامله)
+            // ✅ المجموعات
             ->navigationGroups([
                 NavigationGroup::make()->label('إدارة العمليات')->collapsible(false),
                 NavigationGroup::make()->label('إدارة الشحنات')->collapsible(false),
                 NavigationGroup::make()->label('الإعدادات')->icon('heroicon-o-cog-6-tooth')->collapsed(),
             ])
 
-            // ✅ اكتشاف الريسورسز الحالية بتاعتك (Admin)
-            ->discoverResources(
-                in: app_path('Filament/Admin/Resources'),
-                for: 'App\\Filament\\Admin\\Resources'
-            )
-            ->discoverPages(
-                in: app_path('Filament/Admin/Pages'),
-                for: 'App\\Filament\\Admin\\Pages'
-            )
-            ->discoverWidgets(
-                in: app_path('Filament/Admin/Widgets'),
-                for: 'App\\Filament\\Admin\\Widgets'
-            )
-
-            // ✅ خلي Dashboard يظهر في السايدبار
+            ->discoverResources(in: app_path('Filament/Admin/Resources'), for: 'App\\Filament\\Admin\\Resources')
+            ->discoverPages(in: app_path('Filament/Admin/Pages'), for: 'App\\Filament\\Admin\\Pages')
             ->pages([
                 Pages\Dashboard::class,
             ])
-
+            ->discoverWidgets(in: app_path('Filament/Admin/Widgets'), for: 'App\\Filament\\Admin\\Widgets')
             ->widgets([
                 Widgets\AccountWidget::class,
                 Widgets\FilamentInfoWidget::class,
             ])
-
             ->middleware([
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,
@@ -199,8 +131,8 @@ class AdminPanelProvider extends PanelProvider
                 DisableBladeIconComponents::class,
                 DispatchServingFilamentEvent::class,
 
-                // ✅ منع الدخول إلا للـ admin
-                'panel.role:admin',
+                // ✅ 2. هنا تم إضافة الميدل وير لإجبار اللغة العربية
+                ForceArabic::class,
             ])
             ->authMiddleware([
                 Authenticate::class,
