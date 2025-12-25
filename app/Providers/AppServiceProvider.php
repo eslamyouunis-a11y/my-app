@@ -4,7 +4,9 @@ namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Table;
 use Filament\Infolists\Components\TextEntry;
+use Filament\Infolists\Infolist;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -21,6 +23,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        Table::$defaultNumberLocale = 'ar-u-nu-latn';
+        Infolist::$defaultNumberLocale = 'ar-u-nu-latn';
+
         // ✅ 1. اختصار للجداول (Tables)
         TextColumn::macro('egp', function () {
             /** @var TextColumn $this */ // 👈 السطر ده عشان الـ Error يختفي

@@ -70,15 +70,15 @@ class CourierResource extends Resource
                                 ->schema([
                                     Grid::make(3)->schema([
                                         Forms\Components\Group::make([
-                                            TextInput::make('delivery_value')->label('قيمة التسليم')->numeric()->suffix('ج.م'),
+                                            TextInput::make('delivery_value')->label('قيمة التسليم')->numeric()->suffix('جنيه'),
                                             TextInput::make('delivery_percentage')->label('نسبة التسليم')->numeric()->suffix('%'),
                                         ])->label('تسليم ناجح'),
                                         Forms\Components\Group::make([
-                                            TextInput::make('paid_value')->label('قيمة مرتجع مدفوع')->numeric()->suffix('ج.م'),
+                                            TextInput::make('paid_value')->label('قيمة مرتجع مدفوع')->numeric()->suffix('جنيه'),
                                             TextInput::make('paid_percentage')->label('نسبة مرتجع مدفوع')->numeric()->suffix('%'),
                                         ])->label('مرتجع مدفوع'),
                                         Forms\Components\Group::make([
-                                            TextInput::make('sender_return_value')->label('قيمة مرتجع راسل')->numeric()->suffix('ج.م'),
+                                            TextInput::make('sender_return_value')->label('قيمة مرتجع راسل')->numeric()->suffix('جنيه'),
                                             TextInput::make('sender_return_percentage')->label('نسبة مرتجع راسل')->numeric()->suffix('%'),
                                         ])->label('مرتجع على الراسل'),
                                     ]),
@@ -129,7 +129,7 @@ class CourierResource extends Resource
                         Infolists\Components\Grid::make(3)->schema([
                             Infolists\Components\TextEntry::make('commission_balance')
                                 ->label('رصيد العمولة (للمندوب)')
-                                ->money('EGP')
+                                ->numeric(decimalPlaces: 0, locale: 'ar-u-nu-latn')->suffix(' جنيه')
                                 ->size(Infolists\Components\TextEntry\TextEntrySize::Large)
                                 ->weight(\Filament\Support\Enums\FontWeight::Bold)
                                 ->color('success')
@@ -137,7 +137,7 @@ class CourierResource extends Resource
 
                             Infolists\Components\TextEntry::make('custody_balance')
                                 ->label('رصيد العهدة (على المندوب)')
-                                ->money('EGP')
+                                ->numeric(decimalPlaces: 0, locale: 'ar-u-nu-latn')->suffix(' جنيه')
                                 ->size(Infolists\Components\TextEntry\TextEntrySize::Large)
                                 ->weight(\Filament\Support\Enums\FontWeight::Bold)
                                 ->color('danger')
@@ -182,9 +182,9 @@ class CourierResource extends Resource
                                 Infolists\Components\Section::make('التسليم والمرتجعات')
                                     ->schema([
                                         Infolists\Components\Grid::make(3)->schema([
-                                            Infolists\Components\TextEntry::make('commission.delivery_value')->label('قيمة التسليم')->money('EGP')->placeholder('الافتراضي'),
-                                            Infolists\Components\TextEntry::make('commission.paid_value')->label('قيمة المرتجع')->money('EGP')->placeholder('الافتراضي'),
-                                            Infolists\Components\TextEntry::make('commission.sender_return_value')->label('قيمة مرتجع الراسل')->money('EGP')->placeholder('الافتراضي'),
+                                            Infolists\Components\TextEntry::make('commission.delivery_value')->label('قيمة التسليم')->numeric(decimalPlaces: 0, locale: 'ar-u-nu-latn')->suffix(' جنيه')->placeholder('الافتراضي'),
+                                            Infolists\Components\TextEntry::make('commission.paid_value')->label('قيمة المرتجع')->numeric(decimalPlaces: 0, locale: 'ar-u-nu-latn')->suffix(' جنيه')->placeholder('الافتراضي'),
+                                            Infolists\Components\TextEntry::make('commission.sender_return_value')->label('قيمة مرتجع الراسل')->numeric(decimalPlaces: 0, locale: 'ar-u-nu-latn')->suffix(' جنيه')->placeholder('الافتراضي'),
                                         ]),
                                     ]),
                             ]),

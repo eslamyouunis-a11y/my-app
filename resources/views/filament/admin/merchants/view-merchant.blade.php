@@ -1,17 +1,16 @@
 <x-filament-panels::page>
     @php
-        $courier = $record->loadMissing([
+        $merchant = $record->loadMissing([
             'branch',
             'governorate',
             'area',
-            'commission',
             'user',
+            'products',
+            'specialPrices',
         ]);
 
-        $commission = $courier->commission;
-
         $avatar = 'https://ui-avatars.com/api/?name='
-            . urlencode($courier->full_name ?? '')
+            . urlencode($merchant->name ?? '')
             . '&background=0F172A&color=fff&size=256';
     @endphp
 
@@ -19,40 +18,40 @@
         <div class="cargo-card p-6">
             <div class="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
                 <div class="flex items-center gap-4">
-                    <img src="{{ $avatar }}" class="h-20 w-20 rounded-2xl object-cover ring-2 ring-gray-200" alt="مندوب" />
+                    <img src="{{ $avatar }}" class="h-20 w-20 rounded-2xl object-cover ring-2 ring-gray-200" alt="تاجر" />
 
                     <div>
                         <div class="flex flex-wrap items-center gap-3">
-                            <h2 class="text-2xl font-bold text-gray-900">{{ $courier->full_name ?? '-' }}</h2>
-                            <span class="cargo-pill {{ $courier->is_active ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700' }}">
-                                {{ $courier->is_active ? 'نشط' : 'غير نشط' }}
+                            <h2 class="text-2xl font-bold text-gray-900">{{ $merchant->name ?? '-' }}</h2>
+                            <span class="cargo-pill {{ $merchant->is_active ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700' }}">
+                                {{ $merchant->is_active ? 'نشط' : 'غير نشط' }}
                             </span>
                         </div>
 
                         <div class="mt-3 flex flex-wrap gap-2 text-sm text-gray-600">
-                            <span class="cargo-pill">كود المندوب: {{ $courier->courier_code ?? '-' }}</span>
-                            <span class="cargo-pill">الهاتف: {{ $courier->phone ?? '-' }}</span>
-                            <span class="cargo-pill">الفرع: {{ $courier->branch?->name ?? '-' }}</span>
+                            <span class="cargo-pill">كود التاجر: {{ $merchant->merchant_code ?? '-' }}</span>
+                            <span class="cargo-pill">البريد: {{ $merchant->email ?? '-' }}</span>
+                            <span class="cargo-pill">الفرع: {{ $merchant->branch?->name ?? '-' }}</span>
                         </div>
 
                         <div class="mt-2 text-sm text-gray-500">
-                            {{ $courier->governorate?->name ?? '-' }} - {{ $courier->area?->name ?? '-' }}
+                            {{ $merchant->governorate?->name ?? '-' }} - {{ $merchant->area?->name ?? '-' }}
                         </div>
                     </div>
                 </div>
 
                 <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-2">
                     <div class="rounded-2xl bg-gray-50 p-3 text-center">
-                        <div class="text-xs text-gray-500">الرقم القومي</div>
-                        <div class="mt-1 text-sm font-semibold text-gray-900">{{ $courier->national_id ?? '-' }}</div>
+                        <div class="text-xs text-gray-500">العنوان</div>
+                        <div class="mt-1 text-sm font-semibold text-gray-900">{{ $merchant->address ?? '-' }}</div>
                     </div>
                     <div class="rounded-2xl bg-gray-50 p-3 text-center">
-                        <div class="text-xs text-gray-500">تاريخ الميلاد</div>
-                        <div class="mt-1 text-sm font-semibold text-gray-900">{{ $courier->birth_date ?? '-' }}</div>
+                        <div class="text-xs text-gray-500">عدد المنتجات</div>
+                        <div class="mt-1 text-sm font-semibold text-gray-900">{{ $merchant->products?->count() ?? 0 }}</div>
                     </div>
                     <div class="rounded-2xl bg-gray-50 p-3 text-center sm:col-span-2 lg:col-span-1">
-                        <div class="text-xs text-gray-500">العنوان</div>
-                        <div class="mt-1 text-sm font-semibold text-gray-900">{{ $courier->address ?? '-' }}</div>
+                        <div class="text-xs text-gray-500">الأسعار الخاصة</div>
+                        <div class="mt-1 text-sm font-semibold text-gray-900">{{ $merchant->specialPrices?->count() ?? 0 }}</div>
                     </div>
                 </div>
             </div>
@@ -71,26 +70,25 @@
                         <div class="text-sm font-bold text-gray-900">بيانات الدخول</div>
                     </div>
                 </div>
-                <div class="mt-4 text-sm text-gray-700">البريد الإلكتروني: {{ $courier->user?->email ?? '-' }}</div>
+                <div class="mt-4 text-sm text-gray-700">البريد الإلكتروني: {{ $merchant->user?->email ?? '-' }}</div>
             </div>
 
             <div class="cargo-card p-5">
                 <div class="flex items-center gap-3">
                     <span class="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-amber-50 text-amber-600">
                         <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.6">
-                            <path d="M3 7h12l3 6-3 6H3l3-6-3-6Z" />
-                            <path d="M9 7v12" />
+                            <path d="M6 5h12v14H6z" />
+                            <path d="M9 9h6M9 13h6" />
                         </svg>
                     </span>
                     <div>
-                        <div class="text-xs text-gray-500">المركبة</div>
-                        <div class="text-sm font-bold text-gray-900">بيانات المركبة</div>
+                        <div class="text-xs text-gray-500">التواصل</div>
+                        <div class="text-sm font-bold text-gray-900">بيانات مسؤول الحساب</div>
                     </div>
                 </div>
                 <div class="mt-4 space-y-2 text-sm text-gray-700">
-                    <div>نوع المركبة: {{ $courier->vehicle_type ?? '-' }}</div>
-                    <div>انتهاء رخصة القيادة: {{ $courier->driving_license_expiry ?? '-' }}</div>
-                    <div>انتهاء رخصة المركبة: {{ $courier->vehicle_license_expiry ?? '-' }}</div>
+                    <div>الاسم: {{ $merchant->contact_person_name ?? '-' }}</div>
+                    <div>الهاتف: {{ $merchant->contact_person_phone ?? '-' }}</div>
                 </div>
             </div>
 
@@ -102,13 +100,13 @@
                         </svg>
                     </span>
                     <div>
-                        <div class="text-xs text-gray-500">الطوارئ</div>
-                        <div class="text-sm font-bold text-gray-900">بيانات الطوارئ</div>
+                        <div class="text-xs text-gray-500">المتابعة</div>
+                        <div class="text-sm font-bold text-gray-900">مسؤول المتابعة</div>
                     </div>
                 </div>
                 <div class="mt-4 space-y-2 text-sm text-gray-700">
-                    <div>الاسم: {{ $courier->emergency_name ?? '-' }}</div>
-                    <div>الهاتف: {{ $courier->emergency_phone_1 ?? '-' }}</div>
+                    <div>الاسم: {{ $merchant->follow_up_name ?? '-' }}</div>
+                    <div>الهاتف: {{ $merchant->follow_up_phone ?? '-' }}</div>
                 </div>
             </div>
         </div>
@@ -123,22 +121,18 @@
                 </span>
                 <div>
                     <div class="text-xs text-gray-500">الأرصدة</div>
-                    <div class="text-lg font-bold text-gray-900">أرصدة المندوب</div>
+                    <div class="text-lg font-bold text-gray-900">رصيد التاجر الحالي</div>
                 </div>
             </div>
 
             <div class="mt-5 grid grid-cols-1 gap-4 md:grid-cols-2">
                 <div class="cargo-mini-card cargo-mini-card-muted">
-                    <div class="text-sm font-semibold text-gray-900">رصيد العمولة</div>
-                    <div class="mt-2 text-xl font-bold text-gray-900">
-                        {{ number_format((float) ($courier->commission_balance ?? 0), 0) }} جنيه
+                    <div class="flex items-center justify-between">
+                        <div class="text-sm font-semibold text-gray-900">الرصيد الإجمالي</div>
+                        <span class="rounded-xl bg-emerald-100 px-2 py-1 text-xs text-emerald-700">متاح</span>
                     </div>
-                </div>
-
-                <div class="cargo-mini-card cargo-mini-card-muted">
-                    <div class="text-sm font-semibold text-gray-900">رصيد العهدة</div>
                     <div class="mt-2 text-xl font-bold text-gray-900">
-                        {{ number_format((float) ($courier->custody_balance ?? 0), 0) }} جنيه
+                        {{ number_format((float) ($merchant->balance ?? 0), 0) }} جنيه
                     </div>
                 </div>
             </div>
@@ -152,28 +146,33 @@
                     </svg>
                 </span>
                 <div>
-                    <div class="text-xs text-gray-500">العمولات</div>
-                    <div class="text-lg font-bold text-gray-900">قواعد عمولة المندوب</div>
+                    <div class="text-xs text-gray-500">التسعير</div>
+                    <div class="text-lg font-bold text-gray-900">رسوم التاجر</div>
                 </div>
             </div>
 
-            <div class="mt-5 grid grid-cols-1 gap-4 md:grid-cols-3">
+            <div class="mt-5 grid grid-cols-1 gap-4 md:grid-cols-2">
                 <div class="rounded-2xl bg-gray-50 p-4">
-                    <div class="text-sm font-semibold text-gray-900">تسليم عادي</div>
-                    <div class="mt-2 text-sm text-gray-700">قيمة: <span class="font-semibold">{{ $commission?->delivery_value ?? 0 }} جنيه</span></div>
-                    <div class="text-sm text-gray-700">نسبة: {{ $commission?->delivery_percentage ?? 0 }}%</div>
+                    <div class="text-sm font-semibold text-gray-900">سعر الوزن الزائد</div>
+                    <div class="mt-2 text-sm text-gray-700">قيمة: <span class="font-semibold">{{ $merchant->extra_weight_price ?? 0 }} جنيه</span></div>
                 </div>
 
                 <div class="rounded-2xl bg-gray-50 p-4">
                     <div class="text-sm font-semibold text-gray-900">مرتجع مدفوع</div>
-                    <div class="mt-2 text-sm text-gray-700">قيمة: <span class="font-semibold">{{ $commission?->paid_value ?? 0 }} جنيه</span></div>
-                    <div class="text-sm text-gray-700">نسبة: {{ $commission?->paid_percentage ?? 0 }}%</div>
+                    <div class="mt-2 text-sm text-gray-700">قيمة: <span class="font-semibold">{{ $merchant->paid_return_fee ?? 0 }} جنيه</span></div>
+                    <div class="text-sm text-gray-700">نسبة: {{ $merchant->paid_return_percent ?? 0 }}%</div>
                 </div>
 
                 <div class="rounded-2xl bg-gray-50 p-4">
                     <div class="text-sm font-semibold text-gray-900">مرتجع على الراسل</div>
-                    <div class="mt-2 text-sm text-gray-700">قيمة: <span class="font-semibold">{{ $commission?->sender_return_value ?? 0 }} جنيه</span></div>
-                    <div class="text-sm text-gray-700">نسبة: {{ $commission?->sender_return_percentage ?? 0 }}%</div>
+                    <div class="mt-2 text-sm text-gray-700">قيمة: <span class="font-semibold">{{ $merchant->return_on_sender_fee ?? 0 }} جنيه</span></div>
+                    <div class="text-sm text-gray-700">نسبة: {{ $merchant->return_on_sender_percent ?? 0 }}%</div>
+                </div>
+
+                <div class="rounded-2xl bg-gray-50 p-4">
+                    <div class="text-sm font-semibold text-gray-900">رسوم الإلغاء</div>
+                    <div class="mt-2 text-sm text-gray-700">قيمة: <span class="font-semibold">{{ $merchant->cancellation_fee ?? 0 }} جنيه</span></div>
+                    <div class="text-sm text-gray-700">نسبة: {{ $merchant->cancellation_percent ?? 0 }}%</div>
                 </div>
             </div>
         </div>

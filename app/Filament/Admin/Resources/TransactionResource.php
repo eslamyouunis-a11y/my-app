@@ -101,7 +101,7 @@ class TransactionResource extends Resource
                             ->numeric()
                             ->required()
                             ->minValue(1)
-                            ->suffix('ج.م'),
+                            ->suffix('جنيه'),
                     ]),
 
                     Forms\Components\Textarea::make('description')
@@ -150,7 +150,7 @@ class TransactionResource extends Resource
 
                 Tables\Columns\TextColumn::make('amount')
                     ->label('المبلغ')
-                    ->money('EGP')
+                    ->numeric(decimalPlaces: 0, locale: 'ar-u-nu-latn')->suffix(' جنيه')
                     ->weight('bold')
                     ->color(fn ($record) => $record->type === 'credit' ? 'success' : 'danger')
                     ->prefix(fn ($record) => $record->type === 'credit' ? '+ ' : '- '),

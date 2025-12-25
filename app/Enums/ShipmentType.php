@@ -6,16 +6,20 @@ use Filament\Support\Contracts\HasLabel;
 
 enum ShipmentType: string implements HasLabel
 {
-    case NORMAL = 'normal';         // تسليم عادي
-    case EXCHANGE = 'exchange';     // استبدال (هسلم واستلم)
-    case RETURN_PICKUP = 'return_pickup'; // استرجاع (هروح استلم من العميل)
+    case NORMAL = 'normal';
+    case EXCHANGE = 'exchange';
+    case RETURN = 'return';
+    case PARTIAL_DELIVERY = 'partial_delivery';
+    case RETURN_PICKUP = 'return_pickup';
 
     public function getLabel(): ?string
     {
         return match ($this) {
-            self::NORMAL => 'تسليم عادي',
+            self::NORMAL => 'عادي',
             self::EXCHANGE => 'استبدال',
-            self::RETURN_PICKUP => 'استرجاع (Pickup)',
+            self::RETURN => 'مرتجع',
+            self::PARTIAL_DELIVERY => 'تسليم جزئي',
+            self::RETURN_PICKUP => 'استلام مرتجع',
         };
     }
 }

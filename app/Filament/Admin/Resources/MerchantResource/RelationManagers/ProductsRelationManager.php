@@ -24,7 +24,7 @@ class ProductsRelationManager extends RelationManager
                     ->maxLength(255),
 
                 Forms\Components\TextInput::make('sku')
-                    ->label('كود المنتج (SKU)')
+                    ->label('كود المنتج')
                     ->unique(ignoreRecord: true),
 
                 Forms\Components\TextInput::make('default_weight')
@@ -41,7 +41,7 @@ class ProductsRelationManager extends RelationManager
             ->recordTitleAttribute('name')
             ->columns([
                 Tables\Columns\TextColumn::make('name')->label('المنتج')->searchable(),
-                Tables\Columns\TextColumn::make('sku')->label('SKU')->searchable(),
+                Tables\Columns\TextColumn::make('sku')->label('كود المنتج')->searchable(),
                 Tables\Columns\TextColumn::make('default_weight')->label('الوزن')->suffix(' كجم'),
             ])
             ->headerActions([

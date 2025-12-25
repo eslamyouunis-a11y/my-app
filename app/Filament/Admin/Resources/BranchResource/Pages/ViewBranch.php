@@ -9,12 +9,12 @@ use Filament\Resources\Pages\ViewRecord;
 class ViewBranch extends ViewRecord
 {
     protected static string $resource = BranchResource::class;
+    protected static string $view = 'filament.admin.branches.view-branch';
 
-    // بنضيف زرار "تعديل" فوق عشان لو حب يغير بيانات وهو بيتفرج
     protected function getHeaderActions(): array
     {
         return [
-            Actions\EditAction::make()->label('تعديل البيانات'),
+            Actions\EditAction::make()->label('تعديل الفرع'),
         ];
     }
 }

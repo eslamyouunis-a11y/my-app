@@ -39,12 +39,9 @@ return [
     | Application Timezone
     |--------------------------------------------------------------------------
     |
-    | Here you may specify the default timezone for your application, which
-    | will be used by the PHP date and date-time functions.
-    |
+    | ✅ تم الضبط على توقيت القاهرة لضمان دقة مواعيد الشحنات والتصفيات.
     */
 
-    // ✅ تم التعديل: توقيت مصر عشان تواريخ الشحنات تكون دقيقة
     'timezone' => 'Africa/Cairo',
 
     /*
@@ -52,18 +49,21 @@ return [
     | Application Locale Configuration
     |--------------------------------------------------------------------------
     |
-    | The application locale determines the default locale that will be used
-    | by Laravel's translation / localization methods. This option can be
-    | set to any locale for which you plan to have translation strings.
-    |
+    | ✅ اللغة العربية هي اللغة الأساسية للنظام حالياً.
     */
 
-    // ✅ تم التعديل: العربي هو الأساس
     'locale' => env('APP_LOCALE', 'ar'),
 
     'fallback_locale' => env('APP_FALLBACK_LOCALE', 'ar'),
 
-    // ✅ تم التعديل: عشان البيانات الوهمية تكون بالعربي
+    /*
+    |--------------------------------------------------------------------------
+    | Faker Locale
+    |--------------------------------------------------------------------------
+    |
+    | ✅ ضبط البيانات الوهمية لتظهر بأسماء وعناوين عربية عند الاختبار.
+    */
+
     'faker_locale' => env('APP_FAKER_LOCALE', 'ar_SA'),
 
     /*

@@ -2,7 +2,7 @@
 
 namespace App\Providers\Filament;
 
-use App\Http\Middleware\ForceArabic; // ✅ 1. استدعاء الميدل وير الجديد
+use App\Http\Middleware\ForceArabic; // ✅ استدعاء الميدل وير لإجبار الأرقام الإنجليزية
 use Filament\Actions\CreateAction as HeaderCreateAction;
 use Filament\FontProviders\GoogleFontProvider;
 use Filament\Http\Middleware\Authenticate;
@@ -15,6 +15,7 @@ use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Resources\Pages\CreateRecord;
 use Filament\Support\Enums\MaxWidth;
+use Filament\View\PanelsRenderHook;
 use Filament\Tables\Actions\CreateAction as TableCreateAction;
 use Filament\Widgets;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
@@ -39,14 +40,14 @@ class AdminPanelProvider extends PanelProvider
             ->maxContentWidth(MaxWidth::Full)
             ->sidebarCollapsibleOnDesktop()
 
-            // ✅ تعطيل زر "إضافة وبدء إضافة المزيد" عالمياً
+            // ✅ تعطيل زر "إضافة وبدء إضافة المزيد" عالمياً لتبسيط الواجهة
             ->bootUsing(function () {
                 CreateRecord::disableCreateAnother();
                 TableCreateAction::configureUsing(fn (TableCreateAction $action) => $action->createAnother(false));
                 HeaderCreateAction::configureUsing(fn (HeaderCreateAction $action) => $action->createAnother(false));
             })
 
-            // ✅ الشعار
+            // ✅ الشعار المخصص (Full & Icon)
             ->brandLogo(fn () => new HtmlString('
                 <div class="meta-logo-wrapper">
                     <img src="/logo-full.svg" class="logo-full" alt="Cargo">
@@ -57,53 +58,33 @@ class AdminPanelProvider extends PanelProvider
             ->brandName('Cargo Admin')
 
             ->darkMode(false)
+            ->renderHook('panels::head.end', function () {
+                $version = @filemtime(public_path('css/filament-theme.css')) ?: time();
+                return new HtmlString('<link rel="stylesheet" href="/css/filament-theme.css?v=' . $version . '">');
+            })
+            ->renderHook(PanelsRenderHook::TOPBAR_START, fn () => view('filament.partials.topbar-title'))
 
-            // ✅ الألوان
+            // ✅ لوحة الألوان الخاصة بالهوية
             ->colors([
                 'primary' => [
-                    50  => '#eef1f3',
-                    100 => '#d9dfe3',
-                    200 => '#b3bdc6',
-                    300 => '#8d9ca9',
-                    400 => '#5b7283',
-                    500 => '#283943',
-                    600 => '#24333c',
-                    700 => '#1f2c34',
-                    800 => '#19242a',
-                    900 => '#121a20',
+                    50  => '#fff7ed',
+                    100 => '#ffedd5',
+                    200 => '#fed7aa',
+                    300 => '#fdba74',
+                    400 => '#fb923c',
+                    500 => '#f97316',
+                    600 => '#ea580c',
+                    700 => '#c2410c',
+                    800 => '#9a3412',
+                    900 => '#7c2d12',
                 ],
             ])
 
-            // ✅ الخط
+            // ✅ تعيين خط "Cairo" كخط أساسي للنظام
             ->font('Cairo', provider: GoogleFontProvider::class)
 
-            // ✅ CSS & RTL
-            ->renderHook('panels::head.end', fn () => new HtmlString('
-                <style>
-                    html { direction: rtl; }
-                    body { direction: rtl; text-align: right; }
-                    :root { --fi-font-family: "Cairo", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Arial, "Noto Sans Arabic", sans-serif; }
-                    body, .fi-body, .fi-main, .fi-layout { font-family: var(--fi-font-family) !important; }
-                    body, .fi-main { background: linear-gradient(135deg, #f0f2f5 0%, #ffffff 45%, #eef1f6 100%); }
-                    .fi-layout { --sidebar-width: 240px; --sidebar-collapsed-width: 72px; }
-                    .fi-sidebar { background: #ffffff !important; border-inline-start: 1px solid #e4e6eb; }
-                    .meta-logo-wrapper { min-height: 72px; display: flex; align-items: center; justify-content: center; }
-                    .logo-full { height: 56px; width: auto; display: block; }
-                    .logo-icon { height: 42px; width: auto; display: none; }
-                    .fi-layout[data-sidebar-collapsed="true"] .logo-full { display: none !important; }
-                    .fi-layout[data-sidebar-collapsed="true"] .logo-icon { display: block !important; }
-                    .fi-sidebar-item-label, .fi-sidebar-group-label span, .fi-sidebar-item > a span { font-weight: 900 !important; color: #050505; }
-                    .fi-sidebar-item > a { margin-inline: 8px; border-radius: 12px; transition: background .2s ease; }
-                    .fi-sidebar-item-active > a { background: #283943 !important; }
-                    .fi-sidebar-item-active > a span, .fi-sidebar-item-active > a svg { color: #ffffff !important; }
-                    .fi-sidebar-item:not(.fi-sidebar-item-active) > a:hover { background: #f2f3f5; }
-                    .fi-section { border-radius: 16px !important; box-shadow: 0 8px 24px rgba(0,0,0,.04) !important; border: 1px solid #eef2f7 !important; }
-                    .fi-section-header { font-weight: 800 !important; font-size: 15px; color: #1f2937; }
-                    .fi-badge { border-radius: 999px !important; padding: 6px 14px !important; font-weight: 700; }
-                </style>
-            '))
-
-            // ✅ المجموعات
+            // ✅ تخصيص الـ CSS ودعم الـ RTL (من اليمين لليسار)
+                        // ✅ مجموعات القائمة الجانبية
             ->navigationGroups([
                 NavigationGroup::make()->label('إدارة العمليات')->collapsible(false),
                 NavigationGroup::make()->label('إدارة الشحنات')->collapsible(false),
@@ -113,7 +94,7 @@ class AdminPanelProvider extends PanelProvider
             ->discoverResources(in: app_path('Filament/Admin/Resources'), for: 'App\\Filament\\Admin\\Resources')
             ->discoverPages(in: app_path('Filament/Admin/Pages'), for: 'App\\Filament\\Admin\\Pages')
             ->pages([
-                Pages\Dashboard::class,
+                \App\Filament\Admin\Pages\Dashboard::class,
             ])
             ->discoverWidgets(in: app_path('Filament/Admin/Widgets'), for: 'App\\Filament\\Admin\\Widgets')
             ->widgets([
@@ -131,7 +112,7 @@ class AdminPanelProvider extends PanelProvider
                 DisableBladeIconComponents::class,
                 DispatchServingFilamentEvent::class,
 
-                // ✅ 2. هنا تم إضافة الميدل وير لإجبار اللغة العربية
+                // ✅ الميدل وير لإجبار اللغة العربية وتصحيح نظام الأرقام
                 ForceArabic::class,
             ])
             ->authMiddleware([

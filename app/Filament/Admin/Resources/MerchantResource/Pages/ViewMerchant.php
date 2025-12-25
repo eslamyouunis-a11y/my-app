@@ -9,12 +9,12 @@ use Filament\Resources\Pages\ViewRecord;
 class ViewMerchant extends ViewRecord
 {
     protected static string $resource = MerchantResource::class;
+    protected static string $view = 'filament.admin.merchants.view-merchant';
 
     protected function getHeaderActions(): array
     {
         return [
             Actions\EditAction::make()->label('تعديل التاجر'),
-            // ممكن نضيف زرار "كشف حساب" مستقبلاً هنا
         ];
     }
 }

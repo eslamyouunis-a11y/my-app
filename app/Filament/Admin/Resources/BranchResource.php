@@ -128,21 +128,21 @@ class BranchResource extends Resource
                         Infolists\Components\Grid::make(3)->schema([
                             Infolists\Components\TextEntry::make('total_balance')
                                 ->label('الخزينة (إجمالي)')
-                                ->money('EGP')
+                                ->numeric(decimalPlaces: 0, locale: 'ar-u-nu-latn')->suffix(' جنيه')
                                 ->size(Infolists\Components\TextEntry\TextEntrySize::Large)
                                 ->color('info')
                                 ->icon('heroicon-m-building-library'),
 
                             Infolists\Components\TextEntry::make('commission_balance')
                                 ->label('رصيد الأرباح (العمولة)')
-                                ->money('EGP')
+                                ->numeric(decimalPlaces: 0, locale: 'ar-u-nu-latn')->suffix(' جنيه')
                                 ->size(Infolists\Components\TextEntry\TextEntrySize::Large)
                                 ->color('success')
                                 ->icon('heroicon-m-currency-dollar'),
 
                             Infolists\Components\TextEntry::make('couriers_custody_balance')
                                 ->label('عهدة مع المناديب')
-                                ->money('EGP')
+                                ->numeric(decimalPlaces: 0, locale: 'ar-u-nu-latn')->suffix(' جنيه')
                                 ->size(Infolists\Components\TextEntry\TextEntrySize::Large)
                                 ->color('warning')
                                 ->icon('heroicon-m-users'),
@@ -177,12 +177,12 @@ class BranchResource extends Resource
                                 Infolists\Components\Grid::make(2)->schema([
                                     Infolists\Components\Section::make('توصيل للمنزل')
                                         ->schema([
-                                            Infolists\Components\TextEntry::make('normal_delivery_fee')->label('قيمة')->money('EGP'),
+                                            Infolists\Components\TextEntry::make('normal_delivery_fee')->label('قيمة')->numeric(decimalPlaces: 0, locale: 'ar-u-nu-latn')->suffix(' جنيه'),
                                             Infolists\Components\TextEntry::make('normal_delivery_percent')->label('نسبة')->suffix('%'),
                                         ])->columns(2),
                                     Infolists\Components\Section::make('توصيل مكتب')
                                         ->schema([
-                                            Infolists\Components\TextEntry::make('office_delivery_fee')->label('قيمة')->money('EGP'),
+                                            Infolists\Components\TextEntry::make('office_delivery_fee')->label('قيمة')->numeric(decimalPlaces: 0, locale: 'ar-u-nu-latn')->suffix(' جنيه'),
                                             Infolists\Components\TextEntry::make('office_delivery_percent')->label('نسبة')->suffix('%'),
                                         ])->columns(2),
                                 ]),

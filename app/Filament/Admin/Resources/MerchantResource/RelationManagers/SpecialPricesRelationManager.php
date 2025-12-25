@@ -42,7 +42,7 @@ class SpecialPricesRelationManager extends RelationManager
                     ->label('سعر الشحن الخاص')
                     ->numeric()
                     ->required()
-                    ->suffix('ج.م'),
+                    ->suffix('جنيه'),
             ]);
     }
 
@@ -53,7 +53,7 @@ class SpecialPricesRelationManager extends RelationManager
             ->columns([
                 Tables\Columns\TextColumn::make('governorate.name')->label('المحافظة')->sortable(),
                 Tables\Columns\TextColumn::make('area.name')->label('المنطقة')->placeholder('كل المناطق'),
-                Tables\Columns\TextColumn::make('price')->label('السعر')->money('EGP')->sortable()->weight('bold'),
+                Tables\Columns\TextColumn::make('price')->label('السعر')->numeric(decimalPlaces: 0, locale: 'ar-u-nu-latn')->suffix(' جنيه')->sortable()->weight('bold'),
             ])
             ->filters([
                 //

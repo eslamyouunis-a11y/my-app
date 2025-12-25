@@ -71,7 +71,7 @@ class MerchantResource extends Resource
                             Section::make('تخصيص الرسوم الافتراضية')
                                 ->schema([
                                     Grid::make(3)->schema([
-                                        TextInput::make('extra_weight_price')->label('سعر الكيلو الزيادة')->numeric()->suffix('ج.م'),
+                                        TextInput::make('extra_weight_price')->label('سعر الكيلو الزيادة')->numeric()->suffix('جنيه'),
                                         Forms\Components\Group::make([
                                             TextInput::make('cancellation_fee')->label('رسوم الإلغاء (قيمة)')->numeric(),
                                             TextInput::make('cancellation_percent')->label('رسوم الإلغاء (%)')->numeric(),
@@ -96,8 +96,8 @@ class MerchantResource extends Resource
                                             Forms\Components\Select::make('area_id')->label('المنطقة')->relationship('area', 'name', fn ($query, $get) => $query->where('governorate_id', $get('governorate_id')))->disabled(fn ($get) => !$get('governorate_id'))->searchable()->preload()->helperText('اختياري: اتركه فارغاً لتطبيق السعر على المحافظة بالكامل'),
                                         ]),
                                         Grid::make(2)->schema([
-                                            TextInput::make('delivery_fee')->label('توصيل للمنزل')->numeric()->required()->suffix('ج.م'),
-                                            TextInput::make('office_delivery_fee')->label('توصيل للمكتب')->numeric()->required()->suffix('ج.م')->default(0),
+                                            TextInput::make('delivery_fee')->label('توصيل للمنزل')->numeric()->required()->suffix('جنيه'),
+                                            TextInput::make('office_delivery_fee')->label('توصيل للمكتب')->numeric()->required()->suffix('جنيه')->default(0),
                                         ]),
                                     ])->columnSpanFull(),
                                 ])
@@ -115,7 +115,7 @@ class MerchantResource extends Resource
                                 ->relationship()
                                 ->schema([
                                     TextInput::make('name')->label('اسم المنتج')->required(),
-                                    TextInput::make('sku')->label('كود (SKU)'),
+                                    TextInput::make('sku')->label('كود المنتج'),
                                     TextInput::make('default_weight')->label('الوزن (كجم)')->numeric()->default(1),
                                 ])
                                 ->columns(3)
@@ -166,7 +166,7 @@ class MerchantResource extends Resource
 
                             Infolists\Components\TextEntry::make('balance')
                                 ->label('الرصيد الحالي')
-                                ->money('EGP')
+                                ->numeric(decimalPlaces: 0, locale: 'ar-u-nu-latn')->suffix(' جنيه')
                                 ->size(Infolists\Components\TextEntry\TextEntrySize::Large)
                                 ->color('primary')
                                 ->icon('heroicon-m-wallet'),
@@ -191,9 +191,9 @@ class MerchantResource extends Resource
                             ->icon('heroicon-m-calculator')
                             ->schema([
                                 Infolists\Components\Grid::make(3)->schema([
-                                    Infolists\Components\TextEntry::make('extra_weight_price')->label('سعر الكيلو الزيادة')->money('EGP'),
-                                    Infolists\Components\TextEntry::make('cancellation_fee')->label('رسوم الإلغاء')->money('EGP'),
-                                    Infolists\Components\TextEntry::make('paid_return_fee')->label('رسوم المرتجع')->money('EGP'),
+                                    Infolists\Components\TextEntry::make('extra_weight_price')->label('سعر الكيلو الزيادة')->numeric(decimalPlaces: 0, locale: 'ar-u-nu-latn')->suffix(' جنيه'),
+                                    Infolists\Components\TextEntry::make('cancellation_fee')->label('رسوم الإلغاء')->numeric(decimalPlaces: 0, locale: 'ar-u-nu-latn')->suffix(' جنيه'),
+                                    Infolists\Components\TextEntry::make('paid_return_fee')->label('رسوم المرتجع')->numeric(decimalPlaces: 0, locale: 'ar-u-nu-latn')->suffix(' جنيه'),
                                 ]),
                             ]),
                         Infolists\Components\Tabs\Tab::make('أسعار الشحن الخاصة')
@@ -204,8 +204,8 @@ class MerchantResource extends Resource
                                     ->schema([
                                         Infolists\Components\Grid::make(3)->schema([
                                             Infolists\Components\TextEntry::make('governorate.name')->label('المحافظة')->badge(),
-                                            Infolists\Components\TextEntry::make('delivery_fee')->label('توصيل منزل')->money('EGP'),
-                                            Infolists\Components\TextEntry::make('office_delivery_fee')->label('توصيل مكتب')->money('EGP'),
+                                            Infolists\Components\TextEntry::make('delivery_fee')->label('توصيل منزل')->numeric(decimalPlaces: 0, locale: 'ar-u-nu-latn')->suffix(' جنيه'),
+                                            Infolists\Components\TextEntry::make('office_delivery_fee')->label('توصيل مكتب')->numeric(decimalPlaces: 0, locale: 'ar-u-nu-latn')->suffix(' جنيه'),
                                         ]),
                                     ])
                                     ->grid(2),
@@ -218,7 +218,7 @@ class MerchantResource extends Resource
                                     ->schema([
                                         Infolists\Components\Grid::make(3)->schema([
                                             Infolists\Components\TextEntry::make('name')->label('المنتج'),
-                                            Infolists\Components\TextEntry::make('sku')->label('SKU'),
+                                            Infolists\Components\TextEntry::make('sku')->label('كود المنتج'),
                                             Infolists\Components\TextEntry::make('default_weight')->label('الوزن'),
                                         ]),
                                     ])

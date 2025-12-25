@@ -45,14 +45,14 @@ class ShippingFeeResource extends Resource
                         // باب البيت
                         Forms\Components\TextInput::make('home_price')
                             ->label('سعر للمنزل')
-                            ->numeric()->required()->prefix('EGP'),
+                            ->numeric()->required()->prefix(' جنيه'),
                         Forms\Components\TextInput::make('home_sla_days')
                             ->label('المدة (يوم)')->numeric()->required(),
 
                         // مكتب
                         Forms\Components\TextInput::make('office_price')
                             ->label('سعر للمكتب')
-                            ->numeric()->required()->prefix('EGP'),
+                            ->numeric()->required()->prefix(' جنيه'),
                         Forms\Components\TextInput::make('office_sla_days')
                             ->label('المدة (يوم)')->numeric()->required(),
                     ]),
@@ -80,11 +80,11 @@ class ShippingFeeResource extends Resource
                     ->sortable(),
                 Tables\Columns\TextColumn::make('home_price')
                     ->label('للمنزل')
-                    ->money('EGP')
+                    ->numeric(decimalPlaces: 0, locale: 'ar-u-nu-latn')->suffix(' جنيه')
                     ->weight('bold'),
                 Tables\Columns\TextColumn::make('office_price')
                     ->label('للمكتب')
-                    ->money('EGP'),
+                    ->numeric(decimalPlaces: 0, locale: 'ar-u-nu-latn')->suffix(' جنيه'),
                 Tables\Columns\ToggleColumn::make('is_active')
                     ->label('نشط'),
             ])

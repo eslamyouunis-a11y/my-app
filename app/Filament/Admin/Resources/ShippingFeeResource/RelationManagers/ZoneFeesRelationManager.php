@@ -69,7 +69,7 @@ class ZoneFeesRelationManager extends RelationManager
 
                 Tables\Columns\TextColumn::make('home_price')
                     ->label('سعر باب البيت')
-                    ->money('EGP'),
+                    ->numeric(decimalPlaces: 0, locale: 'ar-u-nu-latn')->suffix(' جنيه'),
 
                 Tables\Columns\TextColumn::make('home_sla_days')
                     ->label('أيام التوصيل'),
