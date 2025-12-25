@@ -47,7 +47,8 @@ class AuthenticatedSessionController extends Controller
         }
 
         // fallback لو المستخدم ملوش role
-        return redirect()->intended('/');
+        // fallback when the user has no panel role
+        return redirect()->intended(route('dashboard'));
     }
 
     /**
