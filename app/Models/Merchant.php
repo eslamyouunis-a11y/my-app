@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphMany; // ✅
+use Illuminate\Support\Str;
 
 class Merchant extends Model
 {
@@ -30,7 +31,7 @@ class Merchant extends Model
     protected static function booted()
     {
         static::creating(function ($merchant) {
-            $merchant->merchant_code = 'M-' . time();
+            $merchant->merchant_code = 'M-' . now()->timestamp . '-' . Str::uuid();
         });
 
         static::deleted(function ($merchant) {
