@@ -114,12 +114,11 @@ class ViewShipment extends ViewRecord
                             ->label('تفاصيل التأجيل')
                             ->rows(3),
                     ])
-                    ->action(fn (array $data) => app(ShipmentActionService::class)->handleReschedule($this->record, $data))
-                    ->visible(fn () => in_array($this->record->status, [
-                        ShipmentStatus::ACCEPTED,
-                        ShipmentStatus::ASSIGNED,
-                        ShipmentStatus::OUT_FOR_DELIVERY,
-                    ], true)),
+                    ->action(function (array $data): void {
+                        app(ShipmentActionService::class)->handleReschedule($this->record, $data);
+                        $this->record->refresh();
+                    })
+                    ->visible(fn () => $this->record->status->canReschedule()),
 
                 Action::make('transfer_branch')
                     ->label('تحويل فرع')
@@ -153,9 +152,10 @@ class ViewShipment extends ViewRecord
                 Action::make('handover_courier')
                     ->label('تسليم للمندوب')
                     ->icon('heroicon-m-truck')
-                    ->action(fn () => $this->record->update([
-                        'status' => ShipmentStatus::OUT_FOR_DELIVERY,
-                    ]))
+                    ->action(function (): void {
+                        app(ShipmentActionService::class)->handleCourierHandover($this->record);
+                        $this->record->refresh();
+                    })
                     ->visible(fn () => $this->record->status === ShipmentStatus::ASSIGNED),
 
                 Action::make('change_courier')
@@ -216,11 +216,11 @@ class ViewShipment extends ViewRecord
                                 true
                             )),
                     ])
-                    ->action(fn (array $data) => app(ShipmentActionService::class)->handleDelivery($this->record, $data))
-                    ->visible(fn () => in_array($this->record->status, [
-                        ShipmentStatus::OUT_FOR_DELIVERY,
-                        ShipmentStatus::RESCHEDULED,
-                    ], true)),
+                    ->action(function (array $data): void {
+                        app(ShipmentActionService::class)->handleDelivery($this->record, $data);
+                        $this->record->refresh();
+                    })
+                    ->visible(fn () => $this->record->status->isWithCourier()),
                 Action::make('return_paid')
                     ->label('مرتجع مدفوع')
                     ->icon('heroicon-m-currency-dollar')
@@ -234,18 +234,12 @@ class ViewShipment extends ViewRecord
                             ->prefix('جنيه'),
                     ])
                     ->action(fn (array $data) => app(ShipmentActionService::class)->handleReturnPaid($this->record, $data))
-                    ->visible(fn () => in_array($this->record->status, [
-                        ShipmentStatus::OUT_FOR_DELIVERY,
-                        ShipmentStatus::RESCHEDULED,
-                    ], true)),
+                    ->visible(fn () => $this->record->status->isWithCourier()),
                 Action::make('return_on_merchant')
                     ->label('مرتجع على التاجر')
                     ->icon('heroicon-m-arrow-uturn-left')
                     ->action(fn () => app(ShipmentActionService::class)->handleReturnOnMerchant($this->record))
-                    ->visible(fn () => in_array($this->record->status, [
-                        ShipmentStatus::OUT_FOR_DELIVERY,
-                        ShipmentStatus::RESCHEDULED,
-                    ], true)),
+                    ->visible(fn () => $this->record->status->isWithCourier()),
                 Action::make('receive_from_courier')
                     ->label('استلام من المندوب')
                     ->icon('heroicon-m-inbox-arrow-down')

@@ -377,11 +377,7 @@ class ShipmentResource extends Resource
                         ->records($selectedRecords)
                         ->label('تأجيل')
                         ->icon('heroicon-m-clock')
-                        ->visible(fn (?Collection $records): bool => in_array(static::getSingleSelected($records)?->status, [
-                            ShipmentStatus::ACCEPTED,
-                            ShipmentStatus::ASSIGNED,
-                            ShipmentStatus::OUT_FOR_DELIVERY,
-                        ], true))
+                        ->visible(fn (?Collection $records): bool => static::getSingleSelected($records)?->status->canReschedule() ?? false)
                         ->form(function (Collection $records): array {
                             $record = static::getSingleSelected($records);
                             if (! $record) {
@@ -434,6 +430,7 @@ class ShipmentResource extends Resource
                             }
 
                             app(ShipmentActionService::class)->handleReschedule($record, $data);
+                            $record->refresh();
                         }),
 
                     BulkAction::make('transfer_branch')
@@ -492,9 +489,8 @@ class ShipmentResource extends Resource
                                 return;
                             }
 
-                            $record->update([
-                                'status' => ShipmentStatus::OUT_FOR_DELIVERY,
-                            ]);
+                            app(ShipmentActionService::class)->handleCourierHandover($record);
+                            $record->refresh();
                         }),
 
                     BulkAction::make('change_courier')
@@ -550,10 +546,7 @@ class ShipmentResource extends Resource
                         ->records($selectedRecords)
                         ->label('تسليم الشحنة')
                         ->icon('heroicon-m-check-badge')
-                        ->visible(fn (?Collection $records): bool => in_array(static::getSingleSelected($records)?->status, [
-                            ShipmentStatus::OUT_FOR_DELIVERY,
-                            ShipmentStatus::RESCHEDULED,
-                        ], true))
+                        ->visible(fn (?Collection $records): bool => static::getSingleSelected($records)?->status->isWithCourier() ?? false)
                         ->form(function (Collection $records): array {
                             $record = static::getSingleSelected($records);
                             if (! $record) {
@@ -593,15 +586,13 @@ class ShipmentResource extends Resource
                             }
 
                             app(ShipmentActionService::class)->handleDelivery($record, $data);
+                            $record->refresh();
                         }),
                     BulkAction::make('return_paid')
                         ->records($selectedRecords)
                         ->label('مرتجع مدفوع')
                         ->icon('heroicon-m-currency-dollar')
-                        ->visible(fn (?Collection $records): bool => in_array(static::getSingleSelected($records)?->status, [
-                            ShipmentStatus::OUT_FOR_DELIVERY,
-                            ShipmentStatus::RESCHEDULED,
-                        ], true))
+                        ->visible(fn (?Collection $records): bool => static::getSingleSelected($records)?->status->isWithCourier() ?? false)
                         ->form(function (Collection $records): array {
                             $record = static::getSingleSelected($records);
                             if (! $record) {
@@ -630,10 +621,7 @@ class ShipmentResource extends Resource
                         ->records($selectedRecords)
                         ->label('مرتجع على التاجر')
                         ->icon('heroicon-m-arrow-uturn-left')
-                        ->visible(fn (?Collection $records): bool => in_array(static::getSingleSelected($records)?->status, [
-                            ShipmentStatus::OUT_FOR_DELIVERY,
-                            ShipmentStatus::RESCHEDULED,
-                        ], true))
+                        ->visible(fn (?Collection $records): bool => static::getSingleSelected($records)?->status->isWithCourier() ?? false)
                         ->action(function (Collection $records): void {
                             $record = static::getSingleSelected($records);
                             if (! $record) {

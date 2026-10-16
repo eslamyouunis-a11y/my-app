@@ -3,12 +3,15 @@
 namespace App\Services;
 
 use App\Enums\ShipmentStatus;
+use App\Enums\ShipmentRescheduleReason;
 use App\Enums\ShipmentType;
 use App\Models\Branch;
 use App\Models\Shipment;
 use App\Models\Transaction;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Carbon\Carbon;
 use Carbon\CarbonInterface;
@@ -33,6 +36,21 @@ class ShipmentActionService
         });
     }
 
+    public function handleCourierHandover(Shipment $shipment): void
+    {
+        DB::transaction(function () use ($shipment) {
+            $shipment = Shipment::query()->lockForUpdate()->findOrFail($shipment->id);
+
+            if ($shipment->status !== ShipmentStatus::ASSIGNED || ! $shipment->courier_id) {
+                throw ValidationException::withMessages([
+                    'status' => 'يجب إسناد الشحنة إلى مندوب قبل خروجها للتسليم',
+                ]);
+            }
+
+            $shipment->update(['status' => ShipmentStatus::OUT_FOR_DELIVERY]);
+        });
+    }
+
     public function handleDelivery(Shipment $shipment, array $data): void
     {
         DB::transaction(function () use ($shipment, $data) {
@@ -41,6 +59,8 @@ class ShipmentActionService
             if ($shipment->status === ShipmentStatus::DELIVERED) {
                 return;
             }
+
+            $this->ensureWithCourier($shipment);
 
             $codAmount = array_key_exists('cod_amount', $data)
                 ? (float) $data['cod_amount']
@@ -83,6 +103,8 @@ class ShipmentActionService
                 return;
             }
 
+            $this->ensureWithCourier($shipment);
+
             $returnValue = array_key_exists('return_value', $data)
                 ? (float) $data['return_value']
                 : (float) $shipment->return_value;
@@ -108,6 +130,8 @@ class ShipmentActionService
             if ($shipment->status === ShipmentStatus::RETURNED_ON_MERCHANT) {
                 return;
             }
+
+            $this->ensureWithCourier($shipment);
 
             $shipment->update([
                 'status' => ShipmentStatus::RETURNED_ON_MERCHANT,
@@ -453,10 +477,21 @@ class ShipmentActionService
         DB::transaction(function () use ($shipment, $data) {
             $shipment = Shipment::query()->lockForUpdate()->findOrFail($shipment->id);
 
-            $rescheduledFor = $data['rescheduled_for'] ?? null;
-            $rescheduledForAt = $rescheduledFor ? Carbon::parse($rescheduledFor) : null;
+            if (! $shipment->status->canReschedule()) {
+                throw ValidationException::withMessages([
+                    'status' => 'لا يمكن تأجيل الشحنة في حالتها الحالية',
+                ]);
+            }
+
+            Validator::make($data, [
+                'rescheduled_for' => ['required', 'date'],
+                'reschedule_reason' => ['required', Rule::enum(ShipmentRescheduleReason::class)],
+                'reschedule_notes' => ['nullable', 'string'],
+            ])->validate();
+
+            $rescheduledForAt = Carbon::parse($data['rescheduled_for']);
             $currentDeliveryAt = $shipment->expected_delivery_at ?? $shipment->delivery_date;
-            if ($rescheduledForAt && $currentDeliveryAt) {
+            if ($currentDeliveryAt) {
                 $currentDeliveryAt = $currentDeliveryAt instanceof CarbonInterface
                     ? $currentDeliveryAt
                     : Carbon::parse($currentDeliveryAt);
@@ -472,15 +507,27 @@ class ShipmentActionService
                 : null;
 
             $shipment->update([
-                'status' => ShipmentStatus::ACCEPTED,
+                // Scheduling must not change custody or undo an existing assignment.
+                'status' => $shipment->status->isWithCourier()
+                    ? ShipmentStatus::RESCHEDULED
+                    : $shipment->status,
                 'rescheduled_at' => now(),
                 'rescheduled_for' => $rescheduledForAt,
-                'reschedule_reason' => $data['reschedule_reason'] ?? null,
+                'reschedule_reason' => $data['reschedule_reason'],
                 'reschedule_notes' => $notes !== '' ? $notes : null,
                 'expected_delivery_at' => $rescheduledForAt,
-                'delivery_date' => $rescheduledForAt?->toDateString(),
+                'delivery_date' => $rescheduledForAt->toDateString(),
             ]);
         });
+    }
+
+    private function ensureWithCourier(Shipment $shipment): void
+    {
+        if (! $shipment->status->isWithCourier()) {
+            throw ValidationException::withMessages([
+                'status' => 'لا يمكن تسجيل نتيجة التسليم قبل خروج الشحنة مع المندوب',
+            ]);
+        }
     }
 
     private function calculateExpectedDeliveryAt(
