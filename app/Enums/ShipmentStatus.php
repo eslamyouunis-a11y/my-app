@@ -13,6 +13,7 @@ enum ShipmentStatus: string implements HasLabel, HasColor, HasIcon
     case ACCEPTED = 'accepted';
     case ASSIGNED = 'assigned';
     case OUT_FOR_DELIVERY = 'out_for_delivery';
+    // A postponed delivery already handed over to the courier.
     case RESCHEDULED = 'rescheduled';
     case DELIVERED = 'delivered';
     case PARTIAL_DELIVERY = 'partial_delivery';
@@ -21,6 +22,16 @@ enum ShipmentStatus: string implements HasLabel, HasColor, HasIcon
     case CANCELLED = 'cancelled';
     case RETURNED_TO_BRANCH = 'returned_to_branch';
     case RETURNED_TO_MERCHANT = 'returned_to_merchant';
+
+    public function isWithCourier(): bool
+    {
+        return in_array($this, [self::OUT_FOR_DELIVERY, self::RESCHEDULED], true);
+    }
+
+    public function canReschedule(): bool
+    {
+        return in_array($this, [self::ACCEPTED, self::ASSIGNED], true) || $this->isWithCourier();
+    }
 
     public function getLabel(): ?string
     {
